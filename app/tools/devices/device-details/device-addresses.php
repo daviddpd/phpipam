@@ -38,9 +38,12 @@ if(in_array("port", $selected_ip_fields)) {
 print "	<th>"._('Port')."</th>";
 }
 print "	<th>"._('Subnet')."</th>";
-print "	<th colspan='2'>"._('Description')."</th>";
 print "	<th class='hidden-xs'>"._('Hostname')."</th>";
+print "	<th class='hidden-xs'>"._('custom_TTL')."</th>";
+print "	<th class='hidden-xs'>"._('custom_RR')."</th>";
+print "	<th class='hidden-xs'>"._('custom_RD')."</th>";
 print "	<th class='hidden-xs hidden-sm'>"._('Owner')."</th>";
+print "	<th colspan='2'>"._('Description')."</th>";
 print "</tr>";
 
 # IP addresses
@@ -65,6 +68,12 @@ if(sizeof($addresses) > 0) {
 			print "	<td class='port'>$ip[port]</td>";
 			}
 			print "	<td class='subnet'><a href='".create_link("subnets",$section['id'],$subnet['id'])."'>$subnet[ip]/$subnet[mask]</a> <span class='text-muted'>($subnet[description])</span></td>";
+
+			print "	<td class='dns hidden-xs'>$ip[hostname]</td>";
+			print "	<td class='dns hidden-xs'>$ip[custom_TTL]</td>";
+			print "	<td class='dns hidden-xs'>$ip[custom_RR]</td>";
+			print "	<td class='dns hidden-xs'>$ip[custom_RD]</td>";
+			print "	<td class='owner hidden-xs hidden-sm'>$ip[owner]</td>";
 			print "	<td class='description'>$ip[description]</td>";
 
 			# print info button for hover
@@ -74,9 +83,6 @@ if(sizeof($addresses) > 0) {
 				print "	<i class='fa fa-comment-o' rel='tooltip' title='$ip[note]'></i>";
 			}
 			print "</td>";
-
-			print "	<td class='dns hidden-xs'>$ip[hostname]</td>";
-			print "	<td class='owner hidden-xs hidden-sm'>$ip[owner]</td>";
 			print "</tr>";
 
 			$ipcnt++;
