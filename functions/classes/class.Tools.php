@@ -2420,8 +2420,6 @@ class Tools extends Common_functions {
 			# print table line
 			if(strlen($option['prefix']) > 0) {
     			# count change?
-    			if ($count != $old_count) { $html[] = "</tbody><tbody>"; }
-
 				$html[] = "<tr class='level$count'>";
 
 				//which level?
@@ -2614,7 +2612,6 @@ class Tools extends Common_functions {
     	$size = sizeof($numbers);
     	// vars
     	$numbers_formatted = array();
-    	$fIndex = int;
 
 		# loop through IP addresses
 		for($c=0; $c<$size; $c++) {

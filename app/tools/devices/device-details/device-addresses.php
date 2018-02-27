@@ -29,15 +29,18 @@ $selected_ip_fields = explode(";", $User->settings->IPfilter);
 print "<h4>"._("Belonging addresses")."</h4><hr>";
 
 # Hosts table
-print "<table id='switchMainTable' class='devices table table-striped table-top table-condensed'>";
+print "<table id='switchMainTable' class='devices table sorted table-striped table-top table-condensed' data-cookie-id-table='device_addresses'>";
 
 # headers
+print "<thead>";
 print "<tr>";
 print "	<th>"._('IP address')."</th>";
 if(in_array("port", $selected_ip_fields)) {
 print "	<th>"._('Port')."</th>";
 }
 print "	<th>"._('Subnet')."</th>";
+print "	<th>"._('Description')."</th>";
+print "	<th></th>";
 print "	<th class='hidden-xs'>"._('Hostname')."</th>";
 print "	<th class='hidden-xs'>"._('custom_TTL')."</th>";
 print "	<th class='hidden-xs'>"._('custom_RR')."</th>";
@@ -45,9 +48,11 @@ print "	<th class='hidden-xs'>"._('custom_RD')."</th>";
 print "	<th class='hidden-xs hidden-sm'>"._('Owner')."</th>";
 print "	<th colspan='2'>"._('Description')."</th>";
 print "</tr>";
+print "</thead>";
 
 # IP addresses
 $ipcnt = 0;
+print "<tbody>";
 if(sizeof($addresses) > 0) {
 	foreach ($addresses as $ip) {
 		# cast
@@ -97,6 +102,7 @@ print "	<td colspan='8'>"._('No hosts belonging to this device')."!</td>";
 print "</tr>";
 }
 
+print "</tbody>";
 print "</table>";			# end table
 print "</td>";
 
