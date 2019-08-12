@@ -995,7 +995,7 @@ class Tools extends Common_functions {
 	 * @return array|null
 	 */
 	public function requests_fetch_available_subnets () {
-		try { $subnets = $this->Database->getObjectsQuery("SELECT * FROM `subnets` where `allowRequests`=1 and COALESCE(`isFull`,0) != 1 ORDER BY `subnet`;"); }
+		try { $subnets = $this->Database->getObjectsQuery("SELECT * FROM `subnets` where `allowRequests`=1 and `isFull`!=1 ORDER BY `subnet`;"); }
 		catch (Exception $e) { $this->Result->show("danger", $e->getMessage(), false);	return false; }
 
 		# save
@@ -2397,7 +2397,7 @@ class Tools extends Common_functions {
 		# remove all not permitted!
 		if(sizeof($prefixes)>0) {
 		foreach($prefixes as $k=>$s) {
-			if($User->get_module_permissions ("pstn")<1) { unset($prefixes[$k]); }
+			if($User->get_module_permissions ("pstn")==User::ACCESS_NONE) { unset($prefixes[$k]); }
 		}
 		}
 
@@ -2490,7 +2490,7 @@ class Tools extends Common_functions {
                 $html[] = "	<td><span class='badge badge1 badge5'>".$cnt."</span></td>";
 
 				//device
-				if($User->get_module_permissions ("devices")>1) {
+				if($User->get_module_permissions ("devices")>=User::ACCESS_RW) {
 					$device = ( $option['deviceId']==0 || empty($option['deviceId']) ) ? false : true;
 
 					if($device===false) { $html[] ='	<td>/</td>' . "\n"; }
@@ -2534,18 +2534,18 @@ class Tools extends Common_functions {
 			    }
 
 			    // actions
-				if($User->get_module_permissions ("pstn")>0) {
+				if($User->get_module_permissions ("pstn")>=User::ACCESS_R) {
 					$html[] = "	<td class='actions' style='padding:0px;'>";
 					$links = [];
 			        $links[] = ["type"=>"header", "text"=>"Show"];
 			        $links[] = ["type"=>"link", "text"=>"View prefix", "href"=>create_link($_GET['page'], "pstn-prefixes", $option['id']), "icon"=>"eye", "visible"=>"dropdown"];
 
-			        if($User->get_module_permissions ("pstn")>1) {
+			        if($User->get_module_permissions ("pstn")>=User::ACCESS_RW) {
 			            $links[] = ["type"=>"divider"];
 			            $links[] = ["type"=>"header", "text"=>"Manage"];
 			            $links[] = ["type"=>"link", "text"=>"Edit prefix", "href"=>"", "class"=>"open_popup", "dataparams"=>" data-script='app/tools/pstn-prefixes/edit.php' data-class='700' data-action='edit' data-id='$option[id]'", "icon"=>"pencil"];
 			        }
-			        if($User->get_module_permissions ("pstn")>2) {
+			        if($User->get_module_permissions ("pstn")>=User::ACCESS_RWA) {
 			            $links[] = ["type"=>"link", "text"=>"Delete prefix", "href"=>"", "class"=>"open_popup", "dataparams"=>" data-script='app/tools/pstn-prefixes/edit.php' data-class='700' data-action='delete' data-id='$option[id]'", "icon"=>"times"];
 			        }
 			        $html[] = $User->print_actions($User->user->compress_actions, $links);
