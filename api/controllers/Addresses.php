@@ -163,6 +163,7 @@ class Addresses_controller extends Common_api_functions  {
 	 *		- /addresses/search_mac/{mac}/   		     // searches for addresses by mac, returns ordered multiple
 	 *      - /addresses/first_free/{subnetId}/          // returns first available address (subnetId can be provided with parameters)
 	 *		- /addresses/custom_fields/                  // custom fields
+	 *		- /addresses/custom_fields/{fieldname}/{value}  // search custom fields, for int columns, exact match, for everything else, like %%.
 	 *		- /addresses/tags/						     // all tags
 	 *		- /addresses/tags/{id}/					     // specific tag
 	 *		- /addresses/tags/{id}/addresses/			 // returns all addresses that are tagged with this tag ***if subnetId is provided it will be filtered to specific subnet
@@ -183,8 +184,34 @@ class Addresses_controller extends Common_api_functions  {
 		// subnet Id > read all addresses in subnet
 		elseif($this->_params->id=="custom_fields") {
 			// check result
-			if(sizeof($this->custom_fields)==0)			{ $this->Response->throw_exception(200, 'No custom fields defined'); }
-			else										{ return array("code"=>200, "data"=>$this->custom_fields); }
+			if(sizeof($this->custom_fields)==0)
+			{
+				$this->Response->throw_exception(200, 'No custom fields defined');
+			} else {
+				// if custom fields are defined and
+				//    id2/id3 are set, then do a custom field search.
+				if ( isset($this->_params->id2) && isset($this->_params->id3) && isset($this->custom_fields{"custom_" . $this->_params->id2})  )
+				{
+					// preg_match ( string $pattern , string $subject ..)
+					if (  preg_match ( '/int/', $this->custom_fields{"custom_" . $this->_params->id2} ) ) {
+						$like = FALSE;
+						$value = $this->_params->id3;
+					} else {
+						$like = TRUE;
+						$value = "%" . $this->_params->id3 . "%";
+					}
+					$result = $this->Tools->fetch_multiple_objects ("ipaddresses", "custom_" . $this->_params->id2, $value, 'id', TRUE, $like );
+					// check result
+					if($result===false)
+					{
+						$this->Response->throw_exception(200, 'custom_' . $this->_params->id2 . ' not found');
+					} else {
+						return array("code"=>200, "data"=>$this->prepare_result ($result, $this->_params->controller, false, false));}
+				} else {
+					// else, if custom_fields is defined and requested, return the custom fields.
+					return array("code"=>200, "data"=>$this->custom_fields );
+				}
+			}
 		}
 		// first free
 		elseif($this->_params->id=="first_free") {
