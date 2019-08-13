@@ -346,11 +346,18 @@ class User_controller extends Common_api_functions {
 	 */
 	private function authenticate () {
 		# if no user/pass are provided die with error
-		if(!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) {
-			$this->Response->throw_exception(400, "Please provide username and password");
+		#if(!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) {
+		#	$this->Response->throw_exception(400, "Please provide username and password");
+		#}
+		if ( isset($_SERVER['PHP_AUTH_USER']) ) {
+			$_USER = $_SERVER['PHP_AUTH_USER'];
+		} else if ( isset($_SERVER['REMOTE_USER']) ) {
+			$_USER = $_SERVER['REMOTE_USER'];
+		} else {
+			$_USER = NULL;
 		}
 		# try to authenticate user, it it fails it will fail by itself
-		$this->User->authenticate ($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+		$this->User->authenticate ($_USER, $_SERVER['PHP_AUTH_PW']);
 
 		# if token is valid and set extend it, otherwise generate new
 		if ($this->validate_user_token ()) {
