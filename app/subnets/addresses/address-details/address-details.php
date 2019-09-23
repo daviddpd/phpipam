@@ -244,6 +244,7 @@ if(sizeof($address)>1) {
     		}
     	}
 
+	$meta->indexView();
 
     	# custom device fields
     	if(sizeof($custom_fields) > 0) {
@@ -396,6 +397,7 @@ if(sizeof($address)>1) {
         print " </td>";
         }
     }
+    print "<!-- End of address-details -->";
 
     print "</table>";
 }

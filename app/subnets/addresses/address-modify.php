@@ -9,6 +9,7 @@
 
 # include required scripts
 require_once( dirname(__FILE__) . '/../../../functions/functions.php' );
+require_once ( dirname(__FILE__) . '/../../../functions/classes/class.dpdMeta.php' );
 
 # initialize required objects
 $Database 	= new Database_PDO;
@@ -74,6 +75,7 @@ else {
 	// save old mac for multicast check
 	$address['mac_old'] = @$address['mac'];
 }
+
 
 # Set action and button text
 if ($action == "add") 			{ $btnName = _("add");		$act = "add"; }
@@ -579,6 +581,7 @@ function validate_mac (ip, mac, sectionId, vlanId, id) {
 		print '	</td>'. "\n";
 		print '</tr>'. "\n";
 	}
+
 	?>
 
 	<tr>
@@ -609,6 +612,8 @@ function validate_mac (ip, mac, sectionId, vlanId, id) {
 		$timeP = 0;
 
 		# all my fields
+
+
 		foreach($custom_fields as $field) {
 			# replace spaces with |
 			$field['nameNew'] = str_replace(" ", "___", $field['name']);

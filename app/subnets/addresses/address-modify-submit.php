@@ -43,6 +43,7 @@ if(isset($_POST['action-visual'])) {
 # save $_POST to $address
 $address = $_POST;
 
+error_log ( "[ADDRESS SUMBIT]" . json_encode($address) );
 
 // set selected address and required addresses fields array
 $selected_ip_fields = $Tools->explode_filtered(";", $User->settings->IPfilter);

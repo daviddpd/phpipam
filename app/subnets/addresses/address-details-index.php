@@ -25,6 +25,11 @@ $custom_fields = $Tools->fetch_custom_fields ('ipaddresses');
 $hidden_cfields = json_decode($User->settings->hiddenCustomFields, true);
 $hidden_cfields = is_array($hidden_cfields['ipaddresses']) ? $hidden_cfields['ipaddresses'] : array();
 
+require_once ( dirname(__FILE__) . '/../../../functions/classes/class.dpdMeta.php' );
+$meta = new dpdMeta($Database);
+$meta->fetch_mutliple( 'ipaddresses', $address['id']);
+
+
 # set selected address fields array
 $selected_ip_fields = $User->settings->IPfilter;
 $selected_ip_fields = explode(";", $selected_ip_fields);																			//format to array
