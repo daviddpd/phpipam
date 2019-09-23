@@ -420,6 +420,7 @@ class Addresses extends Common_functions {
 
 		# edit DNS PTR record
 		$this->ptr_modify ("add", $address);
+		$this->a_modify ("add", $address);
 
 		# threshold alert
 		$this->threshold_check($address);
@@ -472,6 +473,7 @@ class Addresses extends Common_functions {
 
 		# edit DNS PTR record
 		$this->ptr_modify ("edit", $address);
+		$this->a_modify ("edit", $address);
 
 		# ok
 		return true;
@@ -839,13 +841,89 @@ class Addresses extends Common_functions {
 		    else																						{ return gmp_strval(gmp_add($subnet['subnet'], 1)); }
 	    }
 	}
+	/**
+	 * @powerDNS
+	 * -------------------------------
+	 */
+
+	/**
+	 * Modifes powerDNS PTR record
+	 *
+	 * @access public
+	 * @param mixed $action
+	 * @param mixed $address
+	 * @param bool $print_error (default: true)
+	 * @return void
+	 */
+	public function a_modify ($action, $address, $print_error = true) {
+
+        // fetch settings
+        $this->get_settings ();
+        //check if powerdns enabled
+        if ($this->settings->enablePowerDNS!=1) {
+            return false;
+		}
+		$this->pdns_validate_connection ();
+		$h = $address;
+
+		$all_domains = $this->PowerDNS->fetch_all_domains();
+		$pdns_domains = array();
+		if ($all_domains!==false) {
+			foreach($all_domains as $dk=>$domain_s) {
+				$r_domain = implode(".", array_reverse(explode(".", $domain_s->name)));
+				$pdns_domains[$r_domain] = $domain_s->id;
+			}
+		}
+		$ip = $this->transform_address ($address['ip_addr'], "dotted");
+		$hostname = $address['hostname'];
+
+		error_log ( "[Address:a_modify] " . json_encode( $address ) );
+		error_log ( "[Address:a_modify: H IP] " . $ip . " " .  $hostname );
 
 
+			$arecords = $this->PowerDNS->search_records('content', $ip);
+			if ( $arecords ) {
+				foreach ( $arecords as $arec )
+				{
+					if ($arec->type != "A") { continue; }
+					$action="edit";
+					$values = $this->PowerDNS->formulate_update_record($hostname, $arec->type, $h->ip, $arec->ttl, $arec->prio, $arec->disabled, $arec->change_date);
+					$values['domain_id'] = $arec->domain_id;
+					$values['id'] = $arec->id;
+					error_log ( "[Address:a_modify: edit values]" . json_encode( $values ) );
+					error_log ( "[Address:a_modify: edit arec]" . json_encode( $arec ) );
+
+					$ret = $this->PowerDNS->record_edit($action, $values, true);
+				}
+			} else {
+				$action="add";
+				$domain_id = -1;
+				$rhn = array_reverse(explode(".", $hostname));
+
+				for ( $i=0; $i<count($rhn); $i++)
+				{
+					$str = implode (".", $rhn);
+					if ( !isset ($pdns_domains[$str]) ) {
+						array_pop($rhn);
+					} else {
+						$domain_id = $pdns_domains[$str];
+						break;
+					}
+				}
+					error_log ( "[Address:a_modify: domain_id]" . $domain_id );
+
+				if ( $domain_id > 0 ) {
+					error_log ( "[Address:a_modify: edit values]" . json_encode( $values ) );
+					error_log ( "[Address:a_modify: edit arec]" . json_encode( $arec ) );
+
+					$pdns = $this->PowerDNS->db_settings;
+					$values = $this->PowerDNS->formulate_new_record($domain_id, $hostname, 'A', $ip, $pdns->ttl, NULL, 0);
+					$ret = $this->PowerDNS->record_edit($action, $values, true);
+				}
+			}
 
 
-
-
-
+	}
 
 
 	/**

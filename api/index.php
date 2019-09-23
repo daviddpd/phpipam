@@ -219,7 +219,7 @@ try {
 		require_once( dirname(__FILE__) . "/controllers/custom/$controller_file.php");
 	}
 	else {
-		$Response->throw_exception(400, 'Invalid controller');
+		$Response->throw_exception(400, 'Invalid controller ' . $controller_file);
 	}
 
 	// create a new instance of the controller, and pass

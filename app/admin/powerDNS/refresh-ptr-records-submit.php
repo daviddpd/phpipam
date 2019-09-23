@@ -17,6 +17,7 @@ $Subnets 	= new Subnets ($Database);
 $Addresses 	= new Addresses ($Database);
 $PowerDNS 	= new PowerDNS ($Database);
 
+
 # verify that user is logged in
 $User->check_user_session();
 # check maintaneance mode
@@ -56,8 +57,20 @@ $ptr_indexes = $Addresses->ptr_get_subnet_indexes ($subnet->id);
 $PowerDNS->remove_all_ptr_records ($domain->id, $ptr_indexes);
 $Addresses->ptr_unlink_subnet_addresses ($subnet->id);
 
+$pdns = $PowerDNS->db_settings;
+
 // fetch all hosts
 $hosts   = $Addresses->fetch_subnet_addresses ($subnet->id, "ip_addr", "asc");
+$all_domains = $PowerDNS->fetch_all_domains ();
+$pdns_domains = array();
+if ($all_domains!==false) {
+	foreach($all_domains as $dk=>$domain_s) {
+		$r_domain = implode(".", array_reverse(explode(".", $domain_s->name)));
+		$pdns_domains[$r_domain] = $domain_s->id;
+	}
+}
+$success_arec_edit = array ();
+$success_arec_add = array ();
 
 // create PTR records
 if (is_array($hosts) && sizeof($hosts)>0) {
@@ -74,16 +87,57 @@ if (is_array($hosts) && sizeof($hosts)>0) {
 		}
 		// validate hostname, we only add valid hostnames
 		elseif ($Result->validate_hostname ($h->hostname) !== false) {
+			
 			// formulate new record
 			$record = $PowerDNS->formulate_new_record ($domain->id, $PowerDNS->get_ip_ptr_name ($h->ip), "PTR", $h->hostname, $values['ttl']);
 			// insert record
 			$PowerDNS->add_domain_record ($record, false);
-
 			// link
 			$Addresses->ptr_link ($h->id, $PowerDNS->lastId);
-
 			// ok
 			$success[] = $h;
+			$arecords = $PowerDNS->search_records('content', $h->ip);
+			if ( $arecords ) {
+				foreach ( $arecords as $arec )
+				{
+					if ($arec->type != "A") { continue; }
+					$action="edit";
+					$values = $PowerDNS->formulate_update_record($h->hostname, $arec->type, $h->ip, $arec->ttl, $arec->prio, $arec->disabled, $arec->change_date);
+					$values['domain_id'] = $arec->domain_id;
+					$values['id'] = $arec->id;
+					error_log ( "[PTR-refresh: values]" . json_encode( $values ) );
+					error_log ( "[PTR-refresh: arec]" . json_encode( $arec ) );
+					
+					$ret = $PowerDNS->record_edit($action, $values, false);
+					if ( $ret ) { 
+						$success_arec_edit[] = $h;
+					}
+				}
+			} else {
+				$action="add";
+				$domain_id = -1;
+				$rhn = array_reverse(explode(".", $h->hostname));
+				for ( $i=0; $i<count($rhn); $i++) 
+				{
+					$str = implode (".", $rhn);
+					if ( !isset ($pdns_domains[$str]) ) {
+						array_pop($rhn);
+					} else {
+						$domain_id = $pdns_domains[$str];
+						break;
+					}
+				}
+				
+				if ( $domain_id > 0 ) {
+					$values = $PowerDNS->formulate_new_record($domain_id, $h->hostname, 'A', $h->ip, $pdns->ttl, NULL, 0);
+					$ret = $PowerDNS->record_edit($action, $values, false);
+					if ( $ret ) { 
+						$success_arec_add[] = $h;
+					}
+				}
+			} 
+			
+			
 		}
 		// false
 		else {
@@ -102,6 +156,22 @@ if (sizeof(@$success)>0) {
 	}
 	$print[] = "</div>";
 }
+
+if ( count($success_arec_add)>0 ) {
+	$print[] = "<div class='alert alert-success'><h4>Successful A records adds:</h4>";
+	foreach ($success_arec_add as $s) {
+		$print[] = $s->hostname ." > ". $s->ip;
+	}
+	$print[] = "</div>";
+}
+if ( count($success_arec_edit)>0 ) {
+	$print[] = "<div class='alert alert-success'><h4>Successful A records updates:</h4>";
+	foreach ($success_arec_edit as $s) {
+		$print[] = $s->hostname ." > ". $s->ip;
+	}
+	$print[] = "</div>";
+}
+
 if (is_array($failures) && sizeof($failures)>0) {
 	$print[] = "<div class='alert alert-danger'><h4>Invalid PTR hostnames:</h4>";
 	foreach ($failures as $s) {

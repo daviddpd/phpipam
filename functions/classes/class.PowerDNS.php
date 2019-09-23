@@ -780,13 +780,13 @@ class PowerDNS extends Common_functions {
      * @param array $values
      * @return bool
      */
-    public function record_edit ($action, $values) {
+    public function record_edit ($action, $values, $print_success = true) {
         # strip tags
         $values = $this->strip_input_tags ($values);
 
         # execute based on action
-        if($action=="add")          { return $this->add_domain_record ($values); }
-        elseif($action=="edit")     { return $this->update_domain_record ($values['domain_id'], $values); }
+        if($action=="add")          { return $this->add_domain_record ($values, $print_success); }
+        elseif($action=="edit")     { return $this->update_domain_record ($values['domain_id'], $values, $print_success); }
         elseif($action=="delete")   { return $this->remove_domain_record ($values['domain_id'], $values['id']); }
         else                        { return $this->Result->show("danger", _("Invalid action"), true); }
     }
