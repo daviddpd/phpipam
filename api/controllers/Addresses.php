@@ -115,6 +115,7 @@ class Addresses_controller extends Common_api_functions  {
 		$this->init_object ("Addresses", $Database);
 		// set valid keys
 		$this->set_valid_keys ("ipaddresses");
+		$this->PowerDNS = new PowerDNS ($this->Database);
 	}
 
 
@@ -153,6 +154,7 @@ class Addresses_controller extends Common_api_functions  {
 	 *
 	 *	identifiers can be:
 	 *		- /								             // returns all addresses in all sections
+	 *		- /addresses/domains/
 	 *		- /addresses/{id}/
 	 *		- /addresses/{id}/ping/					     // pings address
 	 *      - /addresses/{ip}/{subnetId}/                // Returns address from subnet
@@ -373,7 +375,24 @@ class Addresses_controller extends Common_api_functions  {
             if($result===false)                         { $this->Response->throw_exception(200, 'Host name not found'); }
             else                                        { return array("code"=>200, "data"=>$this->prepare_result ($result, $this->_params->controller, false, false));}
 		// false
-		} else											{  $this->Response->throw_exception(400, "Invalid Id"); }
+		}
+		 elseif (@$this->_params->id=="domains") {
+			$domains = array ();
+			$domains[0] = $this->PowerDNS->fetch_all_forward_domains();
+			$domains[1] = $this->PowerDNS->fetch_reverse_v4_domains();
+			$domains[2] = $this->PowerDNS->fetch_reverse_v6_domains();
+			$result = array ();
+			foreach ($domains as $d) {
+				if ( is_array($d) ) {
+					$result = array_merge ( $result, $d );
+				}
+			}
+            // check result
+            if($result===false)                         { $this->Response->throw_exception(200, 'Domains not found'); }
+            else                                        { return array("code"=>200, "data"=>$this->prepare_result ($result, $this->_params->controller, false, false));}
+		// false
+		}
+		else											{  $this->Response->throw_exception(400, "Invalid Id"); }
 	}
 
 
