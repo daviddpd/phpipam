@@ -371,6 +371,11 @@ else {
 		# ok, execute
 		else {
 			//fail
+			$address['location'] = $address['location_item'];
+			unset ($address['location_item']);
+
+			error_log ( "[ADDRESS SUMBIT]" . json_encode($address) );
+
 		    if (!$Addresses->modify_address($address)) {
 		        $Result->show("danger", _('Error inserting IP address')."!", false);
 		    }
